@@ -1,0 +1,59 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    
+    // Helper functions
+    function getUserData() {
+      return get(/databases/$(database)/documents/users/$(request.auth.uid)).data;
+    }
+    
+    function isAdmin() {
+      return request.auth != null && getUserData().role == 'admin';
+    }
+
+    match /users/{userId} {
+      allow get: if true; // Allow credential verification during fallback login
+      allow create: if request.auth != null && request.auth.uid == userId;
+      allow read, write: if request.auth != null && (request.auth.uid == userId || getUserData().role == 'admin');
+    }
+
+    match /businesses/{businessId} {
+      allow read: if true; // Public booking page needs to view businesses
+      allow create: if request.auth != null && (getUserData().role == 'shop_owner' || getUserData().role == 'admin');
+      allow update, delete: if request.auth != null && (request.auth.uid == resource.data.ownerUserId || getUserData().role == 'admin');
+    }
+
+    match /services/{serviceId} {
+      allow read: if true; // Public booking page needs to list services
+      allow create: if request.auth != null && (getUserData().role == 'shop_owner' || getUserData().role == 'admin');
+      allow update, delete: if request.auth != null && (getUserData().role == 'admin' || (getUserData().role == 'shop_owner' && getUserData().businessId == resource.data.businessId));
+    }
+
+    match /bookings/{bookingId} {
+      allow create: if true; // Anyone (client or guest) can create a booking
+      allow get: if true; // Anyone can retrieve a single booking if they have the ID (for reschedule/cancellation)
+      allow list: if request.auth != null && (getUserData().role == 'admin' || getUserData().businessId == resource.data.businessId || request.auth.uid == resource.data.clientUserId);
+      allow update, delete: if true; // Allow guest/client rescheduling or cancel, and owner completion/cancellation
+    }
+
+    match /reviews/{reviewId} {
+      allow read: if true; // Anyone can view reviews
+      allow create: if request.auth != null && getUserData().role == 'client';
+      allow update, delete: if request.auth != null && (request.auth.uid == resource.data.clientUserId || getUserData().role == 'admin');
+    }
+
+    match /supportTickets/{ticketId} {
+      allow create: if request.auth != null;
+      allow read, update, delete: if request.auth != null && (request.auth.uid == resource.data.createdByUserId || getUserData().role == 'admin');
+    }
+
+    match /partnerApplications/{appId} {
+      allow create: if true; // Anyone can submit an application
+      allow read, write: if request.auth != null && getUserData().role == 'admin';
+    }
+
+    match /mockEmails/{emailId} {
+      allow read, write: if true; // Sandbox email client access
+    }
+  }
+}

@@ -1,0 +1,6 @@
+{
+  "name": "BookEasy",
+  "description": "BookEasy is an all-in-one booking and client management platform for service-based businesses, featuring an owner dashboard, custom services, availability management, and a public-facing client booking page.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

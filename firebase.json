@@ -1,0 +1,12 @@
+{
+  "firestore": [
+    {
+      "database": "(default)",
+      "rules": "firestore.rules"
+    },
+    {
+      "database": "ai-studio-bookeasy-cd65647f-463d-4fc1-8fe0-4ed2320889f4",
+      "rules": "firestore.rules"
+    }
+  ]
+}
